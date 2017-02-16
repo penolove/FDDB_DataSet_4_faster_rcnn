@@ -176,7 +176,6 @@ if __name__=="__main__":
         2002/08/07/big/img_1453
         """
         path_img = os.path.join(originalPics_folds,image_with_target[cur_ind]+'.jpg')
-        print path_img
         img = cv2.imread(path_img) 
         cur_ind+=1
         len_obj=int(image_with_target[cur_ind])

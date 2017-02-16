@@ -1,10 +1,23 @@
-python anno2xml.py FDDB-fold-01-ellipseList.txt;
-python anno2xml.py FDDB-fold-02-ellipseList.txt;
-python anno2xml.py FDDB-fold-03-ellipseList.txt;
-python anno2xml.py FDDB-fold-04-ellipseList.txt;
-python anno2xml.py FDDB-fold-05-ellipseList.txt;
-python anno2xml.py FDDB-fold-06-ellipseList.txt;
-python anno2xml.py FDDB-fold-07-ellipseList.txt;
-python anno2xml.py FDDB-fold-08-ellipseList.txt;
-python anno2xml.py FDDB-fold-09-ellipseList.txt;
-python anno2xml.py FDDB-fold-10-ellipseList.txt;
+#!/bin/bash
+
+DIRECTORY="../originalPics/"
+
+if [ ! -d "$DIRECTORY" ]; then
+    echo " Oops ,It seems data not downloaded properly !"
+    exit 1;
+fi
+
+#dealing FDDB-fold-01-ellipseList.txt;
+#where there are 01~10 list need to process
+# python anno2xml.py FDDB-fold-01-ellipseList.txt;
+for i in $(seq 10)
+do
+    echo "Processing $i-th List";
+    if (( i<10 ));then
+         python anno2xml.py FDDB-fold-0$i-ellipseList.txt;
+    else
+         python anno2xml.py FDDB-fold-$i-ellipseList.txt;
+    fi
+done
+
+python randomSet.py FDDB_2010 0.9

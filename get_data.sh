@@ -8,3 +8,4 @@ fi;
 tar -C originalPics  -zxf originalPics.tar.gz
 wget http://vis-www.cs.umass.edu/fddb/FDDB-folds.tgz
 tar -C originalPics  -zxf FDDB-folds.tgz
+rm FDDB-folds.tgz originalPics.tar.gz
