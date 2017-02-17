@@ -2,13 +2,13 @@ ori_CheckSum=cf414253ac596cd858daae0cc321d793
 folds_CheckSum=4cf9badc939a3398a0d6f3a3c8540f55
 if [ -d originalPics ];
 then
-    echo "dir alreday exist";
+    echo "[FDDB] originalPics dir alreday exist";
 else
     # ---- download originalPics.tar.gz ----
     FILE=originalPics.tar.gz
     #if file not exist
     if [ ! -f $FILE ]; then
-        echo "Downloading originalPics.tar.gz ....."
+        echo "[FDDB] Downloading originalPics.tar.gz ....."
         wget http://tamaraberg.com/faceDataset/originalPics.tar.gz 
     fi
 
@@ -17,7 +17,7 @@ else
         rm $File
         echo $checksum
         echo $folds_CheckSum
-        echo file $FILE : checksum error , need to rerun the script;
+        echo "[FDDB] file $FILE : checksum error , need to rerun the script";
         exit 1;
     fi
 
@@ -27,7 +27,7 @@ else
     FILE=FDDB-folds.tgz
     #if file not exist
     if [ ! -f $FILE ]; then
-        echo "Downloading FDDB-folds.tgz ....."
+        echo "[FDDB] Downloading FDDB-folds.tgz ....."
         wget http://vis-www.cs.umass.edu/fddb/FDDB-folds.tgz
     fi
 
@@ -36,11 +36,11 @@ else
         rm $FILE
         echo $checksum
         echo $folds_CheckSum
-        echo file $FILE : checksum error , need to rerun the script;
+        echo "[FDDB] file $FILE : checksum error , need to rerun the script";
         exit 1;
     fi
 
-    echo "Making originalPics , uncompress files ..."
+    echo "[FDDB] Making originalPics , uncompress files ..."
     mkdir originalPics;
     tar -C originalPics  -zxf originalPics.tar.gz
     tar -C originalPics  -zxf FDDB-folds.tgz

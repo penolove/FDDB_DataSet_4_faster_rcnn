@@ -39,18 +39,18 @@ if __name__=='__main__':
     trainSize=int(len(xml_list)*trainRatio)
 
     #train
-    print "Training set creating..."
+    print "[FDDB] Training set creating..."
     f=open(os.path.join(target_dir_ImSets_Main , 'trainval.txt'),'w')
     for i in xml_list[:trainSize]:
         f.write(i+'\n')
     f.close()
-    print "Done!"
+    print "[FDDB] Done!"
 
     #test
-    print "Testing set creating..."
+    print "[FDDB] Testing set creating..."
     f=open(os.path.join(target_dir_ImSets_Main , 'test.txt'), 'w')
     for i in xml_list[trainSize:]:
         f.write(i+'\n')
     f.close()
-    print "Done!"
+    print "[FDDB] Done!"
 

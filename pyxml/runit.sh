@@ -12,7 +12,7 @@ fi
 # python anno2xml.py FDDB-fold-01-ellipseList.txt;
 for i in $(seq 10)
 do
-    echo "Processing $i-th List";
+    echo "[FDDB] Processing $i-th List";
     if (( i<10 ));then
          python anno2xml.py FDDB-fold-0$i-ellipseList.txt;
     else

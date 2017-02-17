@@ -47,8 +47,4 @@ you can use labelImg to see if it deals properly(This is god dame awesome)
 https://github.com/tzutalin/labelImg 
 ![alt tag](https://raw.githubusercontent.com/penolove/FDDB_DataSet_4_faster_rcnn/master/FDDB.png)
 
-## Step4: clean files produced during execution
-```
-make clean
-```
 
