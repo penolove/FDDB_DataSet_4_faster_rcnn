@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIRECTORY="../originalPics/"
+DIRECTORY="originalPics/"
 
 if [ ! -d "$DIRECTORY" ]; then
     echo " Oops ,It seems data not downloaded properly !"
@@ -14,9 +14,9 @@ for i in $(seq 10)
 do
     echo "[FDDB] Processing $i-th List";
     if (( i<10 ));then
-         python anno2xml.py FDDB-fold-0$i-ellipseList.txt;
+         python pyxml/anno2xml.py --ellipse_list_file originalPics/FDDB-folds/FDDB-fold-0$i-ellipseList.txt;
     else
-         python anno2xml.py FDDB-fold-$i-ellipseList.txt;
+         python pyxml/anno2xml.py --ellipse_list_file originalPics/FDDB-folds/FDDB-fold-$i-ellipseList.txt;
     fi
 done
 

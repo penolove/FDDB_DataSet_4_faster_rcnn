@@ -1,5 +1,5 @@
-ori_CheckSum=cf414253ac596cd858daae0cc321d793
-folds_CheckSum=4cf9badc939a3398a0d6f3a3c8540f55
+pics_checksum=cf414253ac596cd858daae0cc321d793
+folds_checksum=4cf9badc939a3398a0d6f3a3c8540f55
 if [ -d originalPics ];
 then
     echo "[FDDB] originalPics dir alreday exist";
@@ -13,10 +13,10 @@ else
     fi
 
     checksum=`md5sum $FILE | awk '{ print $1 }'`
-    if [ ! "$checksum" = "$ori_CheckSum" ]; then 
+    if [ ! "$checksum" = "$pics_checksum" ]; then 
         rm $File
         echo $checksum
-        echo $folds_CheckSum
+        echo $pics_checksum
         echo "[FDDB] file $FILE : checksum error , need to rerun the script";
         exit 1;
     fi
@@ -32,10 +32,10 @@ else
     fi
 
     checksum=`md5sum $FILE | awk '{ print $1 }'`
-    if [ ! "$checksum" = "$folds_CheckSum" ]; then 
+    if [ ! "$checksum" = "$folds_checksum" ]; then 
         rm $FILE
         echo $checksum
-        echo $folds_CheckSum
+        echo $folds_checksum
         echo "[FDDB] file $FILE : checksum error , need to rerun the script";
         exit 1;
     fi

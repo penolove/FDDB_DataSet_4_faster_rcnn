@@ -1,32 +1,21 @@
-
-from lxml import etree
-import sys
-import cv2
-import math
+import argparse
 import glob
-import os.path
+import math
+import shutil
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+from lxml import etree
 
 
-# target_check exist
-target_dir=os.path.join(os.getcwd(), 'FDDB_2010')
-target_dir_Jpg=os.path.join(target_dir,'JPEGImages')
-target_dir_Ana=os.path.join(target_dir,'Annotations')
-
-if not os.path.exists(target_dir):
-    os.makedirs(target_dir)   
-
-if not os.path.exists(target_dir_Jpg):
-    os.makedirs(target_dir_Jpg)
-
-if not os.path.exists(target_dir_Ana):
-    os.makedirs(target_dir_Ana)   
-
-target_dir_Jpg_set=os.path.join(target_dir_Jpg,'*.jpg')
-cur_ind=0
-outfileID=len(glob.glob(target_dir_Jpg_set))
+DIR_JPG = 'JPEGImages'
+DIR_ANNOTAITON = 'Annotations'
 
 
-def img2xml(path,objects,shape):
+def img2xml(path, objects, shape):
+    if len(shape) != 3:
+        return None
     root = etree.Element("annotation")
     folder = etree.SubElement(root, "folder")
     filename = etree.SubElement(root, "filename")
@@ -38,19 +27,18 @@ def img2xml(path,objects,shape):
     databases.text = "FDDB"
 
     size = etree.SubElement(root, "size")
-    width = etree.SubElement(size,"width")
-    height = etree.SubElement(size,"height")
-    depth = etree.SubElement(size,"depth")
+    width = etree.SubElement(size, "width")
+    height = etree.SubElement(size, "height")
+    depth = etree.SubElement(size, "depth")
     depth.text = str(shape[2])
     width.text = str(shape[1])
     height.text = str(shape[0])
 
-    obj_count=0
+    obj_count = 0
     for obj in objects:
-        #object
-        obj=[float(i) for i in obj.split()]
-        #the smallest circumscribed parallelogram
-        #[link] https://github.com/nouiz/lisa_emotiw/blob/master/emotiw/common/datasets/faces/FDDB.py
+        obj = [float(i) for i in obj.split()]
+        # the smallest circumscribed parallelogram
+        # https://github.com/nouiz/lisa_emotiw/blob/master/emotiw/common/datasets/faces/FDDB.py
         maj_rad = obj[0]
         min_rad = obj[1]
         angle = obj[2]
@@ -67,124 +55,101 @@ def img2xml(path,objects,shape):
         y3 = sin * (min_rad) + cosin * (maj_rad) + ycenter
         x4 = cosin * (-min_rad) - sin * (maj_rad) + xcenter
         y4 = sin * (-min_rad) + cosin * (maj_rad) + ycenter
-        wid=[x1,x2,x3,x4]
-        hei=[y1,y2,y3,y4]
-        xmin_ = int(min(wid))
-        xmax_ = int(max(wid))
-        ymin_ = int(min(hei))
-        ymax_ = int(max(hei))
-        
+        width = [x1, x2, x3, x4]
+        height = [y1, y2, y3, y4]
+        xmin = int(min(width))
+        xmax = int(max(width))
+        ymin = int(min(height))
+        ymax = int(max(height))
+
         # check if out of box
-        if(xmin_ >0 and ymin_>0 and xmax_<shape[1] and ymax_<shape[0]):
-            obj_count+=1
-            object_=etree.SubElement(root, "object")
-            name=etree.SubElement(object_, "name")
-            name.text="face"
-            pose=etree.SubElement(object_, "pose")
-            pose.text="Unspecified"
-            truncated=etree.SubElement(object_, "truncated")
-            truncated.text="0"
-            difficult=etree.SubElement(object_, "difficult")
-            difficult.text="0"
-            # bndbox
-            bndbox=etree.SubElement(object_, "bndbox")
-            xmin=etree.SubElement(bndbox,"xmin")
-            ymin=etree.SubElement(bndbox,"ymin")
-            xmax=etree.SubElement(bndbox,"xmax")
-            ymax=etree.SubElement(bndbox,"ymax")
-            xmin.text = str(xmin_)
-            ymin.text = str(ymin_)
-            xmax.text = str(xmax_)
-            ymax.text = str(ymax_)
-    if obj_count>0:
+        if(xmin > 0 and ymin > 0 and xmax < shape[1] and ymax < shape[0]):
+            obj_count += 1
+            object_ = etree.SubElement(root, "object")
+            name = etree.SubElement(object_, "name")
+            name.text = "face"
+            pose = etree.SubElement(object_, "pose")
+            pose.text = "Unspecified"
+            truncated = etree.SubElement(object_, "truncated")
+            truncated.text = "0"
+            difficult = etree.SubElement(object_, "difficult")
+            difficult.text = "0"
+            # bounded box
+            bndbox = etree.SubElement(object_, "bndbox")
+            xmin_ = etree.SubElement(bndbox, "xmin")
+            ymin_ = etree.SubElement(bndbox, "ymin")
+            xmax_ = etree.SubElement(bndbox, "xmax")
+            ymax_ = etree.SubElement(bndbox, "ymax")
+            xmin_.text = str(xmin)
+            ymin_.text = str(ymin)
+            xmax_.text = str(xmax)
+            ymax_.text = str(ymax)
+
+    if obj_count > 0:
         et = etree.ElementTree(root)
-        Ana_write2xml = os.path.join(target_dir_Ana, path+".xml")
-        et.write( Ana_write2xml, pretty_print=True)
-        return True
-    else: 
-        return False
-
-def face_box_wh(path,objects,shape):
-    obj_count=0
-    wh=list()
-    for obj in objects:
-        #object
-        obj=[float(i) for i in obj.split()]
-        #the smallest circumscribed parallelogram
-        #[link] https://github.com/nouiz/lisa_emotiw/blob/master/emotiw/common/datasets/faces/FDDB.py
-        maj_rad = obj[0]
-        min_rad = obj[1]
-        angle = obj[2]
-        xcenter = obj[3]
-        ycenter = obj[4]
-        cosin = math.cos(math.radians(-angle))
-        sin = math.sin(math.radians(-angle))
-
-        x1 = cosin * (-min_rad) - sin * (-maj_rad) + xcenter
-        y1 = sin * (-min_rad) + cosin * (-maj_rad) + ycenter
-        x2 = cosin * (min_rad) - sin * (-maj_rad) + xcenter
-        y2 = sin * (min_rad) + cosin * (-maj_rad) + ycenter
-        x3 = cosin * (min_rad) - sin * (maj_rad) + xcenter
-        y3 = sin * (min_rad) + cosin * (maj_rad) + ycenter
-        x4 = cosin * (-min_rad) - sin * (maj_rad) + xcenter
-        y4 = sin * (-min_rad) + cosin * (maj_rad) + ycenter
-        wid=[x1,x2,x3,x4]
-        hei=[y1,y2,y3,y4]
-        xmin_ = int(min(wid))
-        xmax_ = int(max(wid))
-        ymin_ = int(min(hei))
-        ymax_ = int(max(hei))
-        
-        # check if out of box
-        if(xmin_ >0 and ymin_>0 and xmax_<shape[1] and ymax_<shape[0]):
-            obj_count+=1
-            wh.append([xmax-xmin,ymax-ymin])
-    if obj_count>0:
-        return wh
-    else: 
-        return list()
-
-# the annotation files path
-FDDB_folds=os.path.join("..",'originalPics','FDDB-folds')
-originalPics_folds=os.path.join("..",'originalPics')
-
-if __name__=="__main__":
-    # you need to modify the path_img below
-    # and the FDDB-fold-were assign by your own
-    if len(sys.argv) < 2:
-        ellipseList=os.path.join(FDDB_folds,'FDDB-fold-01-ellipseList.txt')
-    elif len(sys.argv)==2:
-        ellipseList=os.path.join(FDDB_folds,sys.argv[1])
+        return et
     else:
-        print "usage : python example.py [ellipseList]"
-        sys.exit(0)
+        return None
 
-    current_file=open(ellipseList,'r')
-    image_with_target=[i.replace('\n','') for i in current_file.readlines()]
-    current_file.close()
 
-    while (cur_ind<len(image_with_target)):
-        """ since the format of the string is :
-        (2 object in 2002/08/02/big/img_769)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='arg parse for fddb data transate')
+    parser.add_argument('--source_pic_path', type=str, help='FDDB file source path',
+                        default='originalPics')
+    parser.add_argument('--ellipse_list_file', type=str, help='FDDB file source path',
+                        default='originalPics/FDDB-folds/FDDB-fold-01-ellipseList.txt')
+    parser.add_argument('--destination_path', type=str, help='destination folder',
+                        default='FDDB_2010')
+    args = parser.parse_args()
+
+    # input
+    original_pics_folds = Path(args.source_pic_path)
+    ellipse_list_file = args.ellipse_list_file
+
+    # output
+    destination_path = Path(args.destination_path)
+    # create annotation folder
+    annotation_output_folder = destination_path / 'Annotations'
+    annotation_output_folder.mkdir(parents=True, exist_ok=True)
+    # create jpge folder
+    jpge_image_output_folder = destination_path / 'JPEGImages'
+    jpge_image_output_folder.mkdir(parents=True, exist_ok=True)
+
+    with open(ellipse_list_file, 'r') as f:
+        image_with_target = [i.strip() for i in f]
+
+    output_file_id = len(glob.glob(str(jpge_image_output_folder / '*.jpg')))
+    current_index = 0
+    while (current_index < len(image_with_target)):
+        """
+        example1: 2 object in 2002/08/02/big/img_769
+        2002/08/02/big/img_760
         2
         58.887348 37.286244 1.441974 88.083450 78.409537  1
         60.381076 40.303691 1.377522 260.502940 102.769525  1
+
+        example2: 1 object in 2002/08/07/big/img_1453
         2002/08/02/big/img_760
-        (1 object in 2002/08/07/big/img_1453)
         1
         67.995400 38.216200 -1.559920 208.966471 109.764400  1
         2002/08/07/big/img_1453
         """
-        path_img = os.path.join(originalPics_folds,image_with_target[cur_ind]+'.jpg')
-        img = cv2.imread(path_img) 
-        cur_ind+=1
-        len_obj=int(image_with_target[cur_ind])
-        cur_ind+=1
-        objects=image_with_target[cur_ind:cur_ind+len_obj]
-        cur_ind+=len_obj
-        path=str(outfileID).zfill(6)
-        if(img2xml(path,objects,img.shape)):
-            img_path2write = os.path.join(target_dir_Jpg,path+".jpg")
-            cv2.imwrite(img_path2write, img)
-            outfileID+=1
+        src_image_file = '%s.jpg' % image_with_target[current_index]
+        path_img = str(original_pics_folds / src_image_file)
+        shape = np.array(Image.open(path_img)).shape
+        current_index += 1
+        len_obj = int(image_with_target[current_index])
+        current_index += 1
+        objects = image_with_target[current_index: current_index+len_obj]
+        current_index += len_obj
+        image_id = str(output_file_id).zfill(6)
 
+        etree_object = img2xml(output_file_id, objects, shape)
+        if etree_object:
+            xml_output_name = "%s.xml" % image_id
+            xml_output_path = str(annotation_output_folder / xml_output_name)
+            etree_object.write(xml_output_path, pretty_print=True)
+            jpge_output_name = "%s.jpg" % image_id
+            jpge_output_path = str(jpge_image_output_folder / jpge_output_name)
+            shutil.copy2(path_img, jpge_output_path)
+            output_file_id += 1
