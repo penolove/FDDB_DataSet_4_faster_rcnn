@@ -1,7 +1,7 @@
 # FDDB_DataSet_4_faster_rcnn
 
 
-## Quick Steps (if done, skip Step1, Step2)
+## Quick Start (if done, skip Step1, Step2)
 ```
 pip install -r requiremnets.txt
 make
